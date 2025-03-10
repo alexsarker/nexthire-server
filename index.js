@@ -20,9 +20,11 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     const postCollection = client.db("NexthireDB").collection("postjobs");
-    const applicationCollection = client.db("NexthireDB").collection("applications");
+    const applicationCollection = client
+      .db("NexthireDB")
+      .collection("applications");
 
     app.get("/jobs", async (req, res) => {
       try {
@@ -63,10 +65,14 @@ async function run() {
     app.delete("/jobs/delete/:id", async (req, res) => {
       try {
         const id = req.params.id;
-        const result = await postCollection.deleteOne({ _id: new ObjectId(id) });
+        const result = await postCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
 
         if (result.deletedCount === 0) {
-          return res.status(404).send({ error: "Job not found or already deleted" });
+          return res
+            .status(404)
+            .send({ error: "Job not found or already deleted" });
         }
 
         res.send({ message: "Job post deleted successfully" });
@@ -78,13 +84,26 @@ async function run() {
     app.post("/jobs/apply", async (req, res) => {
       try {
         const { jobId, userEmail } = req.body;
-        const applicants = await applicationCollection.findOne({ jobId, userEmail });
+        const applicants = await applicationCollection.findOne({
+          jobId,
+          userEmail,
+        });
         if (applicants) {
-          return res.status(400).send({ error: "You have already applied for this job" });
+          return res
+            .status(400)
+            .send({ error: "You have already applied for this job" });
         }
 
-        const result = await applicationCollection.insertOne({ jobId, userEmail, appliedAt: new Date() });
-        res.send({ success: true, message: "Application submitted successfully", result });
+        const result = await applicationCollection.insertOne({
+          jobId,
+          userEmail,
+          appliedAt: new Date(),
+        });
+        res.send({
+          success: true,
+          message: "Application submitted successfully",
+          result,
+        });
       } catch (error) {
         res.status(500).send({ error: "Failed to apply for job" });
       }
@@ -97,7 +116,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("Boss is here!");
+  res.send("NextHire is here!");
 });
 
 app.listen(port, () => {
