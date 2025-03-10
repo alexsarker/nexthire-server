@@ -32,6 +32,12 @@ async function run() {
       }
     });
 
+    app.get("/jobs/:category", async (req, res) => {
+      const { category } = req.params;
+      const jobs = await postCollection.find({ category }).toArray();
+      res.send(jobs);
+    });
+
     app.post("/jobs", async (req, res) => {
       try {
         const jobData = req.body;
@@ -42,14 +48,33 @@ async function run() {
       }
     });
 
-    app.get("/jobs/:id", async (req, res) => {
+    app.get("/jobs/details/:id", async (req, res) => {
       try {
         const id = req.params.id;
         const job = await postCollection.findOne({ _id: new ObjectId(id) });
         if (!job) return res.status(404).send({ error: "Job not found" });
         res.send(job);
       } catch (error) {
-        res.status(500).send({ error: "Failed to fetch job" });
+        res.status(500).send({ error: "Failed to fetch job details" });
+      }
+    });
+
+    app.delete("/jobs/delete/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const result = await postCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        if (result.deletedCount === 0) {
+          return res
+            .status(404)
+            .send({ error: "Job not found or already deleted" });
+        }
+
+        res.send({ message: "Job post deleted successfully" });
+      } catch (error) {
+        res.status(500).send({ error: "Failed to delete job post" });
       }
     });
 
